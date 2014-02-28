@@ -29,8 +29,7 @@
 																	40.0)];
 	
 	_monthYearPicker = [[LTHMonthYearPickerView alloc] initWithDate: [NSDate date]
-														shortMonths: NO
-													 numberedMonths: NO
+                                                      displayType:kQuarter
 														 andToolbar: YES];
 	_monthYearPicker.delegate = self;
 	_dateTextField.delegate = self;
@@ -46,8 +45,8 @@
 
 
 #pragma mark - LTHMonthYearPickerView Delegate
-- (void)pickerDidPressDoneWithMonth:(NSString *)month andYear:(NSString *)year {
-    _dateTextField.text = [NSString stringWithFormat: @"%@ / %@", month, year];
+- (void)pickerDidPressDoneWithSelection:(NSString *)first second:(NSString *)second {
+    _dateTextField.text = [NSString stringWithFormat: @"%@ / %@", first, second];
 	[_dateTextField resignFirstResponder];
 }
 

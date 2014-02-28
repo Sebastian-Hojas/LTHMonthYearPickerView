@@ -10,11 +10,17 @@
 
 @optional
 - (void)pickerDidSelectRow:(NSInteger)row inComponent:(NSInteger)component;
-- (void)pickerDidPressDoneWithMonth:(NSString *)month andYear:(NSString *)year;
+- (void)pickerDidPressDoneWithSelection:(NSString *)first second:(NSString *)second;
 - (void)pickerDidPressCancel;
 
 @end
 
+typedef enum {
+  kMonth = 1,
+  kShortMonth = 2,
+  kNumberedMonths = 3,
+  kQuarter = 4
+} k_displayType;
 
 @interface LTHMonthYearPickerView : UIView <UIPickerViewDataSource, UIPickerViewDelegate>
 
@@ -24,13 +30,11 @@
 @property (nonatomic, strong) NSMutableArray *years;
 
 /*
- @numberedMonths: set to YES if you want months to be returned as 01, 02, etc.
- @shortMonths: set to YES if you want months to be returned as Jan, Feb, etc.
- @shortMonths: set to NO if you want months to be returned as January, February, etc.
  @date: set to a date if you want the picker to be initialized with a specific month and year.
 	it automatically fetches the month & year from @date.
+ @displayType: define what options the picker should offer (months, numbered months, quarters)
  @showToolbar: set to YES if you want the picker to have a Cancel/Done toolbar.
  */
-- (id)initWithDate:(NSDate *)date shortMonths:(BOOL)shortMonths numberedMonths:(BOOL)numbered andToolbar:(BOOL)showToolbar;
+- (id)initWithDate:(NSDate *)date displayType:(k_displayType)displayType andToolbar:(BOOL)showToolbar;
 
 @end

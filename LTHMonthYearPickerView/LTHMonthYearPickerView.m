@@ -45,12 +45,21 @@ const NSString *kOct = @"Oc";
 const NSString *kNov = @"Nov";
 const NSString *kDec = @"Dec";
 
+const NSString *kQuarter1 = @"Quarter #1";
+const NSString *kQuarter2 = @"Quarter #2";
+const NSString *kQuarter3 = @"Quarter #3";
+const NSString *kQuarter4 = @"Quarter #4";
+
+
+
+
 
 @interface LTHMonthYearPickerView ()
 
 @property (nonatomic, strong) NSDate *date;
 @property (readwrite) NSInteger currentYear;
 @property (readwrite) NSInteger currentMonth;
+@property (readonly) k_displayType displayType;
 
 @end
 
@@ -60,12 +69,12 @@ const NSString *kDec = @"Dec";
 
 #pragma mark - UIPickerViewDelegate
 - (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component {
-    if ([self.delegate respondsToSelector: @selector(pickerDidSelectRow:inComponent:)])
-        [self.delegate pickerDidSelectRow: row inComponent: component];
-//	[[NSNotificationCenter defaultCenter] postNotificationName: @"pickerDidSelectRow"
-//														object: self
-//													  userInfo: @{@"row" : @(row),
-//                                                                  @"component" : @(component)}];
+  if ([self.delegate respondsToSelector: @selector(pickerDidSelectRow:inComponent:)])
+    [self.delegate pickerDidSelectRow: row inComponent: component];
+  //	[[NSNotificationCenter defaultCenter] postNotificationName: @"pickerDidSelectRow"
+  //														object: self
+  //													  userInfo: @{@"row" : @(row),
+  //                                                                  @"component" : @(component)}];
 }
 
 
@@ -97,13 +106,13 @@ const NSString *kDec = @"Dec";
 
 
 - (CGFloat)pickerView:(UIPickerView *)pickerView widthForComponent:(NSInteger)component {
-    return self.bounds.size.width / 2;
+  return self.bounds.size.width / 2;
 }
 
 
 #pragma mark - UIPickerViewDataSource
 - (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView {
-    return 2;
+  return 2;
 }
 
 
@@ -113,142 +122,163 @@ const NSString *kDec = @"Dec";
 
 
 - (NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component {
-    if (component == kMonthIndex) {
-        return _months.count;
-    }
-    return _years.count;
+  if (component == kMonthIndex) {
+    return _months.count;
+  }
+  return _years.count;
 }
 
 
 #pragma mark - Actions
 - (void)_done {
-    if ([self.delegate respondsToSelector: @selector(pickerDidPressDoneWithMonth:andYear:)])
-        [self.delegate pickerDidPressDoneWithMonth: _months[[_datePicker selectedRowInComponent: 0]]
-										   andYear: _years[[_datePicker selectedRowInComponent: 1]]];
-//	[[NSNotificationCenter defaultCenter] postNotificationName: @"pickerDidPressDone"
-//														object: self
-//													  userInfo: @{@"month" : _months[[_datePicker selectedRowInComponent: 0],
-//                                                                  @"year" : _years[[_datePicker selectedRowInComponent: 1]]}];
+  if ([self.delegate respondsToSelector: @selector(pickerDidPressDoneWithSelection:second:)])
+    [self.delegate pickerDidPressDoneWithSelection: _months[[_datePicker selectedRowInComponent: 0]]
+                                            second: _years[[_datePicker selectedRowInComponent: 1]]];
+  //	[[NSNotificationCenter defaultCenter] postNotificationName: @"pickerDidPressDone"
+  //														object: self
+  //													  userInfo: @{@"month" : _months[[_datePicker selectedRowInComponent: 0],
+  //                                                                  @"year" : _years[[_datePicker selectedRowInComponent: 1]]}];
 }
 
 
 - (void)_cancel {
-    if ([self.delegate respondsToSelector: @selector(pickerDidPressCancel)])
-        [self.delegate pickerDidPressCancel];
-//	[[NSNotificationCenter defaultCenter] postNotificationName: @"pickerDidPressDone"
-//														object: self
-//													  userInfo: nil];
+  if ([self.delegate respondsToSelector: @selector(pickerDidPressCancel)])
+    [self.delegate pickerDidPressCancel];
+  //	[[NSNotificationCenter defaultCenter] postNotificationName: @"pickerDidPressDone"
+  //														object: self
+  //													  userInfo: nil];
 }
 
 
 
 #pragma mark - Init
 - (void)_setupComponents {
-    NSCalendar *calendar = [NSCalendar currentCalendar];
-    _currentYear = [calendar components: NSCalendarUnitYear
-                               fromDate: [NSDate date]].year;
-    _currentMonth = [calendar components: NSCalendarUnitMonth
-                                fromDate: [NSDate date]].month;
-    if (!_date) {
+  NSCalendar *calendar = [NSCalendar currentCalendar];
+  _currentYear = [calendar components: NSCalendarUnitYear
+                             fromDate: [NSDate date]].year;
+  _currentMonth = [calendar components: NSCalendarUnitMonth
+                              fromDate: [NSDate date]].month;
+  if (!_date) {
+    
+    if(_displayType==kQuarter)
+      [_datePicker selectRow: floor(_currentMonth/4.0)
+                 inComponent: 0
+                    animated: YES];
+    
+    else
+      [_datePicker selectRow: _currentMonth - 1
+                 inComponent: 0
+                    animated: YES];
+    
+    
+    [_datePicker selectRow: [_years indexOfObject: @(_currentYear)]
+               inComponent: 1
+                  animated: YES];
+  }
+  else {
+    NSDateComponents *dateComponents = [calendar components: NSCalendarUnitDay | NSCalendarUnitMonth | NSCalendarUnitYear
+                                                   fromDate: _date];
+    if (dateComponents.year < _currentYear) {
+      [_datePicker selectRow: _currentMonth - 1
+                 inComponent: 0
+                    animated: YES];
+      [_datePicker selectRow: [_years indexOfObject: @(_currentYear)]
+                 inComponent: 1
+                    animated: YES];
+    }
+    else if (dateComponents.year == _currentYear) {
+      if (dateComponents.month < _currentMonth) {
         [_datePicker selectRow: _currentMonth - 1
-				   inComponent: 0
-					  animated: YES];
-        [_datePicker selectRow: [_years indexOfObject: @(_currentYear)]
-				   inComponent: 1
-					  animated: YES];
+                   inComponent: 0
+                      animated: YES];
+      }
+      else {
+        [_datePicker selectRow: dateComponents.month - 1
+                   inComponent: 0
+                      animated: YES];
+      }
+      [_datePicker selectRow: [_years indexOfObject: @(_currentYear)]
+                 inComponent: 1
+                    animated: YES];
     }
     else {
-        NSDateComponents *dateComponents = [calendar components: NSCalendarUnitDay | NSCalendarUnitMonth | NSCalendarUnitYear
-                                                       fromDate: _date];
-        if (dateComponents.year < _currentYear) {
-            [_datePicker selectRow: _currentMonth - 1
-					   inComponent: 0
-						  animated: YES];
-            [_datePicker selectRow: [_years indexOfObject: @(_currentYear)]
-					   inComponent: 1
-						  animated: YES];
-        }
-        else if (dateComponents.year == _currentYear) {
-            if (dateComponents.month < _currentMonth) {
-                [_datePicker selectRow: _currentMonth - 1
-						   inComponent: 0
-							  animated: YES];
-            }
-            else {
-                [_datePicker selectRow: dateComponents.month - 1
-						   inComponent: 0
-							  animated: YES];
-            }
-            [_datePicker selectRow: [_years indexOfObject: @(_currentYear)]
-					   inComponent: 1
-						  animated: YES];
-        }
-        else {
-            [_datePicker selectRow: dateComponents.month - 1
-					   inComponent: 0
-						  animated: YES];
-            [_datePicker selectRow: [_years indexOfObject: @(dateComponents.year)]
-					   inComponent: 1
-						  animated: YES];
-        }
+      [_datePicker selectRow: dateComponents.month - 1
+                 inComponent: 0
+                    animated: YES];
+      [_datePicker selectRow: [_years indexOfObject: @(dateComponents.year)]
+                 inComponent: 1
+                    animated: YES];
     }
+  }
 }
 
 
 #pragma mark - Init
-- (id)initWithDate:(NSDate *)date shortMonths:(BOOL)shortMonths numberedMonths:(BOOL)numberedMonths andToolbar:(BOOL)showToolbar {
-    self = [super init];
-    if (self) {
-        _date = date;
-        if (numberedMonths)
-            _months = @[@"01", @"02", @"03", @"04", @"05", @"06",
-                        @"07", @"08", @"09", @"10", @"11", @"12"];
-        else if (shortMonths)
-			_months = @[kJan, kFeb, kMar, kApr, kMay, kJun, kJul, kAug, kSep, kOct, kNov, kDec];
-		else
-            _months = @[kJanuary, kFebruary, kMarch, kApril, kMay, kJune,
-						kJuly, kAugust, kSeptember, kOctober, kNovember, kDecember];
-        _years = [[NSMutableArray alloc] initWithCapacity: kMaxYear - kMinYear + 1];
-        for (NSInteger year = kMinYear; year <= kMaxYear; year++) {
-            [_years addObject: @(year)];
-        }
-        
+- (id)initWithDate:(NSDate *)date displayType:(k_displayType)displayType andToolbar:(BOOL)showToolbar {
+  self = [super init];
+  if (self) {
+    _date = date;
+    _displayType = displayType;
+    
+    
+    switch (displayType) {
+      case kMonth:
+        _months = @[kJanuary, kFebruary, kMarch, kApril, kMay, kJune,
+                    kJuly, kAugust, kSeptember, kOctober, kNovember, kDecember];
+        break;
+      case kShortMonth:
+        _months = @[kJan, kFeb, kMar, kApr, kMay, kJun, kJul, kAug, kSep, kOct, kNov, kDec];
+        break;
+      case kNumberedMonths:
+        _months = @[@"01", @"02", @"03", @"04", @"05", @"06",
+                    @"07", @"08", @"09", @"10", @"11", @"12"];
+        break;
+      case kQuarter:
+        _months = @[kQuarter1, kQuarter2, kQuarter3, kQuarter4];
+    }
+    
+    
+    _years = [[NSMutableArray alloc] initWithCapacity: kMaxYear - kMinYear + 1];
+    for (NSInteger year = kMinYear; year <= kMaxYear; year++) {
+      [_years addObject: @(year)];
+    }
+    
 		CGRect datePickerFrame;
-        if (showToolbar) {
+    if (showToolbar) {
 			datePickerFrame = CGRectMake((kWinSize.width - kWinSize.width) / 2, 42, 320.0, 216.0);
-            UIToolbar *toolbar = [[UIToolbar alloc]
-                                  initWithFrame: CGRectMake(0, 0, kWinSize.width, 44.0)];
-            
-            UIBarButtonItem *cancelButton = [[UIBarButtonItem alloc]
-                                             initWithBarButtonSystemItem: UIBarButtonSystemItemCancel
-                                             target: self
-                                             action: @selector(_cancel)];
-            UIBarButtonItem *flexSpace = [[UIBarButtonItem alloc]
-                                          initWithBarButtonSystemItem: UIBarButtonSystemItemFlexibleSpace
-                                          target: self
-                                          action: nil];
-            UIBarButtonItem *doneBtn = [[UIBarButtonItem alloc]
-                                        initWithBarButtonSystemItem: UIBarButtonSystemItemDone
-                                        target: self
-                                        action: @selector(_done)];
-            
-            [toolbar setItems: [NSArray arrayWithObjects:cancelButton,flexSpace,doneBtn, nil]
-                     animated: YES];
-            [self addSubview: toolbar];
-            
-            self.frame = CGRectMake(0.0, 0.0, kWinSize.width, 256.0);
-        }
-        else {
+      UIToolbar *toolbar = [[UIToolbar alloc]
+                            initWithFrame: CGRectMake(0, 0, kWinSize.width, 44.0)];
+      
+      UIBarButtonItem *cancelButton = [[UIBarButtonItem alloc]
+                                       initWithBarButtonSystemItem: UIBarButtonSystemItemCancel
+                                       target: self
+                                       action: @selector(_cancel)];
+      UIBarButtonItem *flexSpace = [[UIBarButtonItem alloc]
+                                    initWithBarButtonSystemItem: UIBarButtonSystemItemFlexibleSpace
+                                    target: self
+                                    action: nil];
+      UIBarButtonItem *doneBtn = [[UIBarButtonItem alloc]
+                                  initWithBarButtonSystemItem: UIBarButtonSystemItemDone
+                                  target: self
+                                  action: @selector(_done)];
+      
+      [toolbar setItems: [NSArray arrayWithObjects:cancelButton,flexSpace,doneBtn, nil]
+               animated: YES];
+      [self addSubview: toolbar];
+      
+      self.frame = CGRectMake(0.0, 0.0, kWinSize.width, 256.0);
+    }
+    else {
 			datePickerFrame = CGRectMake((kWinSize.width - kWinSize.width) / 2, 0.0, 320.0, 216.0);
 			self.frame = CGRectMake(0.0, 0.0, kWinSize.width, 216.0);
 		}
-        _datePicker = [[UIPickerView alloc] initWithFrame: datePickerFrame];
-        _datePicker.dataSource = self;
-        _datePicker.delegate = self;
-        [self addSubview: _datePicker];
-        [self _setupComponents];
-    }
-    return self;
+    _datePicker = [[UIPickerView alloc] initWithFrame: datePickerFrame];
+    _datePicker.dataSource = self;
+    _datePicker.delegate = self;
+    [self addSubview: _datePicker];
+    [self _setupComponents];
+  }
+  return self;
 }
 
 
